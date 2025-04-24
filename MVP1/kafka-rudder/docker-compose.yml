@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: bitnami/zookeeper:3.8
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    networks:
+      - rudder_net
+
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    depends_on:
+      - zookeeper
+    networks:
+      - rudder_net
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=rudder
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=jobsdb
+    ports:
+      - "6432:5432"
+    shm_size: 128mb
+    networks:
+      - rudder_net
+
+  backend:
+    depends_on:
+      - db
+      - metrics-exporter
+      - d-transformer
+      - kafka  # Add kafka dependency
+    image: rudderlabs/rudder-server:latest
+    entrypoint: sh -c '/wait-for db:5432 -- /rudder-server'
+    ports:
+      - "8080:8080"
+    environment:
+      - JOBS_DB_HOST=db
+      - JOBS_DB_USER=rudder
+      - JOBS_DB_PORT=5432
+      - JOBS_DB_DB_NAME=jobsdb
+      - JOBS_DB_PASSWORD=password
+      - DEST_TRANSFORM_URL=http://d-transformer:9090
+      - CONFIG_BACKEND_URL=https://api.rudderstack.com
+      - WORKSPACE_TOKEN=2vuPsKpa9K0bRoRvVKVJ2HCK4UD
+      - STATSD_SERVER_URL=metrics-exporter:9125
+      - RSERVER_GATEWAY_WEBHOOK_SOURCE_LIST_FOR_PARSING_PARAMS=Shopify
+      - KAFKA_BROKERS=kafka:9092  # ✅ Add this to point Rudder to Kafka
+    networks:
+      - rudder_net
+
+  d-transformer:
+    depends_on:
+      - metrics-exporter
+    image: rudderstack/rudder-transformer:latest
+    ports:
+      - "9090:9090"
+    environment:
+      - STATSD_SERVER_HOST=metrics-exporter
+      - STATSD_SERVER_PORT="9125"
+    networks:
+      - rudder_net
+
+  metrics-exporter:
+    image: prom/statsd-exporter:v0.22.4
+    ports:
+      - "9102:9102"
+    networks:
+      - rudder_net
+
+networks:
+  rudder_net:
+    driver: bridge
+
