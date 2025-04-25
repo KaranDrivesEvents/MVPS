@@ -1,0 +1,4 @@
+# Ignore all .log and .out files under any flink version logs
+**/flink-*/log/*.log*
+**/flink-*/log/*.out
+
