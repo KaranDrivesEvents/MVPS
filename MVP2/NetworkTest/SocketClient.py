@@ -6,6 +6,7 @@ try:
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
     # Connect to the server on localhost:9002
+    print("Attempting to connect to server...")
     client_socket.connect(('localhost', 9000))
     
     # Print a message to indicate connection
