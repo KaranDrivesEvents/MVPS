@@ -1,4 +1,8 @@
-# HighSpeed Streaming Project (Flink)
+# This project was created with a purposeo of writing sample Flink application. 
+
+Below instructions will help you 
+- Start a Flink Cluster. 
+- Run existing stream application. 
 
 Running this locally won’t be a smooth ride. Thank you for taking the time to try out the monolithic setup :D.  We’ll be migrating to a managed service soon and setting up a universal development environment to make collaboration seamless. 
 

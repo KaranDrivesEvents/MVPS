@@ -30,7 +30,7 @@ public class HighSpeedDetection {
         DataStream<String> dataStream = env
                 .socketTextStream("localhost", 9000).uid("car-speed-read")
                 .filter(new Filter())
-                .name('High-speed Filter Operaton').uid("car-speed-filter");
+                .name("High-speed Filter Operaton").uid("car-speed-filter");
 
         dataStream.print().uid("car-speed-print");
 
