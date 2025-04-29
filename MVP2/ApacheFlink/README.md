@@ -1,4 +1,4 @@
-# This project was created with a purposeo of writing sample Flink application. 
+# This project was created with a purpose of writing sample Flink application. 
 
 Below instructions will help you 
 - Start a Flink Cluster. 
