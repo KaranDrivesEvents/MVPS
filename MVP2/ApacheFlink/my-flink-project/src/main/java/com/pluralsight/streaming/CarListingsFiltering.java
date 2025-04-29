@@ -1,10 +1,12 @@
 package com.pluralsight.streaming;
 
 import org.apache.flink.api.common.functions.FilterFunction;
-import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-public class CarListingsFiltering {
+import java.util.InvalidPropertiesFormatException;
+
+public class CarListingsMapping {
 
     public static class Car {
 
@@ -35,24 +37,31 @@ public class CarListingsFiltering {
         final StreamExecutionEnvironment env =
                 StreamExecutionEnvironment.getExecutionEnvironment();
 
-        DataStream<Car> dataStream = env.fromElements(
-                new Car("BMW", "745i 4dr", "Sedan", 69195f),
-                new Car("BMW", "745Li 4dr", "Sedan", 73195f),
-                new Car("BMW", "545", "Sedan", 39195f),
-                new Car("Chevrolet", "Cavalier 2dr", "Sedan", 14610f),
-                new Car("Chevrolet", "Avalanche 1500", "Truck", 36100f),
-                new Car("Chevrolet", "Cruz", "Sedan", 16400f),
-                new Car("Ford", "Excursion 6.8 XLT", "SUV", 41475f),
-                new Car("Ford", "Focus LX 4dr", "Sedan", 13730f),
-                new Car("Ford", "Figo", "Sedan", 10730f),
-                new Car("Honda", "Civic Hybrid 4dr manual", "Hybrid", 20140f));
-
-        dataStream.filter(new MakePriceFilter("BMW", 70000f))
-                  .print();
+        env.socketTextStream("localhost", 9000)
+           .map(new CreateCarObjects())
+           .filter(new MakePriceFilter("Ford", 20000f))
+           .print();
 
         env.execute();
     }
 
+    public static class CreateCarObjects implements MapFunction<String, Car> {
+
+        @Override
+        public Car map(String carString) throws Exception {
+
+            String[] tokens = carString.split(",");
+
+            if (tokens.length < 4) {
+                throw new InvalidPropertiesFormatException("Invalid stream input: " + carString);
+            }
+
+            return new Car(tokens[0].trim(),
+                           tokens[1].trim(),
+                           tokens[2].trim(),
+                           Float.parseFloat(tokens[3].trim()));
+        }
+    }
 
     public static class MakePriceFilter implements FilterFunction<Car> {
 
@@ -69,8 +78,7 @@ public class CarListingsFiltering {
             return (car.make).equals(make) && (car.price < price);
         }
     }
+
+
 }
-
-
-
 
