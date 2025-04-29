@@ -48,6 +48,7 @@ public class CarListingsMapping {
     public static class CreateCarObjects implements MapFunction<String, Car> {
 
         @Override
+        // Overriding MapFunction | MapFunction<T, O> | T -> Input Type, O -> Output Type, O is Output type
         public Car map(String carString) throws Exception {
 
             String[] tokens = carString.split(",");
